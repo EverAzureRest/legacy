@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetName": {
+      "type": "string",
+      "defaultValue": "VNet1",
+      "metadata": {
+        "description": "VNet name"
+      }
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Address prefix"
+      }
+    },
+    "subnet1Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 1 Prefix"
+      }
+    },
+    "subnet1Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 1 Name"
+      }
+    },
+    "subnet2Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 2 Prefix"
+      }
+    },
+    "subnet2Name": {
+      "type": "string",
+      "defaultValue": "Subnet2",
+      "metadata": {
+        "description": "Subnet 2 Name"
+      }
+    },
+    "subnet3Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 3 Prefix"
+      }
+    },
+    "subnet3Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 3 Name"
+      }
+    },
+    "subnet4Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 4 Prefix"
+      }
+    },
+    "subnet4Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 4 Name"
+      }
+    },
+    "subnet5Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 5 Prefix"
+      }
+    },
+    "subnet5Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 5 Name"
+      }
+    },
+    "subnet6Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 6 Prefix"
+      }
+    },
+    "subnet6Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 6 Name"
+      }
+    }
+  },
+  "variables": {
+    "apiVersion": "2015-06-15"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('vnetName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnet1Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet2Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet2Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet3Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet3Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet4Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet4Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet5Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet5Prefix')]"
+            }
+          },
+            {
+              "name": "[parameters('subnet6Name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet6Prefix')]"
+              }
+            }
+        ]
+      }
+    }
+  ]
+}
