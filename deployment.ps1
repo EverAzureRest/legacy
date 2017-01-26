@@ -1,7 +1,8 @@
-﻿param(
+﻿[cmdletbinding()]
+param(
 $localadminUserName = "LocalAdmin",
 $storageRG = "LegacySG",
-$storageName = "LegacyStandardSA",
+$storageName = "legacystandardsa",
 $vnetName = "LegacyVnet",
 $vnetRG = "LegacyVNETRG",
 $vnetIPRange = "10.248.0.0/16",
@@ -31,20 +32,29 @@ $natScriptUri = "https://raw.githubusercontent.com/lorax79/legacy/master/nat-ipt
 $natVMUri = "https://raw.githubusercontent.com/lorax79/legacy/master/natVM.json",
 $testVMTemplateUri = "https://raw.githubusercontent.com/lorax79/AzureTemplates/master/avm-base-bare.json",
 $testVM1NamePrefix = "TestVM0",
-$testVM2NamePrefix = "TestVM1"
+$testVM2NamePrefix = "TestVM1",
+[switch]$cleanup
 )
 
 ##Login to an Azure Account and focus on the defined subscription
 Login-AzureRmAccount
 Get-AzureRmSubscription -SubscriptionName $subscriptionName | Select-AzureRmSubscription
 
-$rgs = $storageRG,$vnetRG,$panRGName,$natVMRg,$vmRGName
+$rgs = $panRGName,$natVMRg,$vmRGName,$storageRG,$vnetRG
+
+if ($cleanup) {
+    foreach ($rg in $rgs) {
+        Remove-AzureRmResourceGroup -Name $rg -Force -Confirm:$false
+        }
+    }
+else {
 
 ##Build the Resource Groups to hold the resources if they do not exist
 Write-Verbose "Checking Azure for Resource Groups and building them if necessary"
 foreach ($rg in $rgs) {
-    if(!(get-azurermresourcegroup -Name $rg))
+    if(!(get-azurermresourcegroup -Name $rg -ErrorAction SilentlyContinue))
     {
+    Write-Verbose "Building Resource Group $rg"
     New-AzureRmResourceGroup -Name $rg -Location $deploymentLocation
     }
 }
@@ -56,11 +66,11 @@ $vnetParams = @{
     'vnetName' = $vnetName;
     'vnetAddressPrefix' = $vnetIPRange;
     'subnet1Prefix' = $gatewaySubnetCIDR;
-    'subnet1Name' = $gatewaySubnetCIDR;
+    'subnet1Name' = $gatewaySubnetName
     'subnet2Prefix' = $dmzSubnetCIDR;
     'subnet2Name' = $dmzSubnetName;
     'subnet3Prefix' = $medTrustSubnetCIDR;
-    'subnet3Name' = $medTrustSubnetCIDR;
+    'subnet3Name' = $medTrustSubnetName;
     'subnet4Prefix' = $highTrustSubnetCIDR;
     'subnet4Name' = $highTrustSubnetName;
     'subnet5Prefix' = $mgmtSubnetCIDR;
@@ -70,8 +80,8 @@ $vnetParams = @{
 }
 
 #Check for and Deploy the Vnet if it doesn't exist
-
-if (!(Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetRG)) {
+Write-Verbose "Checking for VNET $vnetname"
+if (!(Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetRG -ea SilentlyContinue)) {
 Write-Verbose "Deploying the Vnet $vnetName"
 try {
     New-AzureRmResourceGroupDeployment -Name VNet -ResourceGroupName $vnetRG -Mode Incremental -TemplateUri $vnetTemplateUri -TemplateParameterObject $vnetParams
@@ -79,6 +89,9 @@ try {
 catch {
     throw "Error creating Vnet. Stopping deployment, check the error logs"
     }
+}
+else {
+    Write-Verbose "VNET Exists. Continuing"
 }
 
 ##Start Section - Build Storage Account
@@ -89,8 +102,8 @@ $storageParams = @{
 }
 
 #Check for and Deploy the Storage Account if it doesn't exist
-
-if (!(Get-AzureRmStorageAccount -Name $storageName -ResourceGroupName $storageRG)) {
+Write-Verbose "Checking for Storage Account $storagename"
+if (!(Get-AzureRmStorageAccount -Name $storageName -ResourceGroupName $storageRG -ea SilentlyContinue)) {
 Write-Verbose "Deploying the Storage Account $storageName"
 try {
     New-AzureRmResourceGroupDeployment -Name Storage -ResourceGroupName $storageRG -Mode Incremental -TemplateUri $storageTemplateUri -TemplateParameterObject $storageParams
@@ -99,6 +112,9 @@ catch {
     throw "Error Creating the Storage Account. Deployment Stopped, please check the logs"
     }
 }
+else {
+    Write-Verbose "Storage Account Exists. Continuing"
+    }
 
 #Start Section - Build PAN VM
 #Create the params hash
@@ -119,14 +135,14 @@ $panParams = @{
     'subnet2StartAddress' = "10.248.12.4";
     'adminUsername' = $localadminUserName;
     'PublicIPRGName' = $vnetRG;
-    'PublicIPAddressName' = "lhPANPublicIP";
+    'PublicIPAddressName' = "lhpanpublicip";
     'storageAccountName' = $storageName;
     'storageAccountExistingRG' = $storageRG;
 }
 
 #Check for Palo Alto VM and deploy if it doesn't exist
-
-if (!(Get-AzureRmVM -Name $panVMName -ResourceGroupName $panRGName)) {
+Write-Verbose "Checking for Palo Alto VM $panVMName"
+if (!(Get-AzureRmVM -Name $panVMName -ResourceGroupName $panRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying Palo Alto VM"
 try {
     New-AzureRmResourceGroupDeployment -Name PANVM -ResourceGroupName $panRGName -Mode Incremental -TemplateUri $panVMTemplateUri -TemplateParameterObject $panParams
@@ -142,7 +158,7 @@ $natVMParams = @{
     'adminUsername' = $localadminUserName;
     'vmNamePrefix' = $natVMNamePrefix;
     'virtualNetworkName' = $vnetName;
-    'virtualNetworkResouceGroup' = $vnetRG;
+    'virtualNetworkResourceGroup' = $vnetRG;
     'subnetName' = $dmzSubnetName;
     'storageAccountName' = $storageName;
     'fileUris' = $natScriptUri;
@@ -152,8 +168,8 @@ $natVMParams = @{
 }
 
 #Check for the NAT VM and deploy if it doesn't exist
-
-if (!(Get-AzureRmVM -Name ($natvmname + '0') -ResourceGroupName $natVMRg)) {
+Write-Verbose "Checking for NAT VM"
+if (!(Get-AzureRmVM -Name ($natVMNamePrefix + '0') -ResourceGroupName $natVMRg -ea SilentlyContinue)) {
 Write-Verbose "Deploying NAT VM"
 try {
     New-AzureRmResourceGroupDeployment -Name NATVM -ResourceGroupName $natVMRg -Mode Incremental -TemplateUri $natVMUri -TemplateParameterObject $natVMParams
@@ -186,8 +202,8 @@ $testvm2params = @{
 }
 
 #Check for test VM 1 and deploy if it doesn't Exist
-
-if (!(Get-AzureRmVM -Name ($testVM1NamePrefix + '0') -ResourceGroupName $vmRGName)) {
+Write-Verbose "Checking for TestVM1..."
+if (!(Get-AzureRmVM -Name ($testVM1NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params).subnetname.value"
 try {
     New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm1parmas
@@ -201,8 +217,8 @@ else {
     }
 
 #Check for test VM2 and deploy if it doesn't Exist
-
-if (!(Get-AzureRmVM -Name ($testVM2NamePrefix + '0') -ResourceGroupName $vmRGName)) {
+Write-Verbose "Checking for TestVM2"
+if (!(Get-AzureRmVM -Name ($testVM2NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying 2nd TestVM to subnet $($testvm2params).subnetname.value"
 try {
     New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm2parmas
@@ -215,3 +231,4 @@ else {
     Write-Verbose "The TestVM2 Exists already. Continuing"
     }
 
+}
