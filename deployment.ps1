@@ -28,7 +28,7 @@ $deploymentLocation = "WestUS2",
 $vnetTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/vnet.json",
 $storageTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/storageaccount.json",
 $panVMTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/panVM.json",
-$natScriptUri = "https://raw.githubusercontent.com/lorax79/legacy/master/nat-iptables.sh",
+#$natScriptUri = "https://raw.githubusercontent.com/lorax79/legacy/master/nat-iptables.sh",
 $natVMUri = "https://raw.githubusercontent.com/lorax79/legacy/master/natVM.json",
 $testVMTemplateUri = "https://raw.githubusercontent.com/lorax79/AzureTemplates/master/avm-base-bare.json",
 $testVM1NamePrefix = "TestVM0",
@@ -161,7 +161,7 @@ $natVMParams = @{
     'virtualNetworkResourceGroup' = $vnetRG;
     'subnetName' = $dmzSubnetName;
     'storageAccountName' = $storageName;
-    'fileUris' = $natScriptUri;
+ #   'fileUris' = $natScriptUri;
     'commandToExecute' = "sh nat-iptables.sh";
     'publicIpAddressName' = "lhNatVMPublicIP";
     'networkSecurityGroupName' = "lhNatNSG"
@@ -204,7 +204,7 @@ $testvm2params = @{
 #Check for test VM 1 and deploy if it doesn't Exist
 Write-Verbose "Checking for TestVM1..."
 if (!(Get-AzureRmVM -Name ($testVM1NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
-Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params).subnetname.value"
+Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params.subnetname)"
 try {
     New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm1parmas
     }
@@ -219,7 +219,7 @@ else {
 #Check for test VM2 and deploy if it doesn't Exist
 Write-Verbose "Checking for TestVM2"
 if (!(Get-AzureRmVM -Name ($testVM2NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
-Write-Verbose "Deploying 2nd TestVM to subnet $($testvm2params).subnetname.value"
+Write-Verbose "Deploying 2nd TestVM to subnet $($testvm2params.subnetname)"
 try {
     New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm2parmas
     }
