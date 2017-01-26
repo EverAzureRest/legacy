@@ -94,7 +94,9 @@
     },
     "fileUris": {
       "type": "array",
-      "defaultValue": "https://raw.githubusercontent.com/lorax79/legacy/master/nat-iptables.sh"
+      "defaultValue": [
+        "https://raw.githubusercontent.com/lorax79/legacy/master/nat-iptables.sh"
+      ]
     },
     "commandToExecute": {
       "type": "securestring"
