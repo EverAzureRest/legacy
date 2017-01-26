@@ -41,8 +41,11 @@ Get-AzureRmSubscription -SubscriptionName $subscriptionName | Select-AzureRmSubs
 
 $rgs = $panRGName,$natVMRg,$vmRGName,$storageRG,$vnetRG
 
+#If cleanup switch is used, it will remove the entire environment
 if ($cleanup) {
+    Write-Verbose "Cleanup Switch Used. Deleting all resources defined in the deployment."
     foreach ($rg in $rgs) {
+        Write-Verbose "Deleting Resource Group $rg and all of its resources..."
         Remove-AzureRmResourceGroup -Name $rg -Force -Confirm:$false
         }
     }
