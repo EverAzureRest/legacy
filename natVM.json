@@ -17,10 +17,10 @@
     },
     "imgSKU": {
       "type": "string",
-      "defaultValue": "14.04.0-LTS",
+      "defaultValue": "14.04.4-LTS",
       "allowedValues": [
         "16.04.0-LTS",
-        "14.04.0-LTS"
+        "14.04.4-LTS"
       ],
       "metadata": {
         "description": "Ubuntu OS Vesrsion"
@@ -121,7 +121,7 @@
   },
   "variables": {
     "vmNamePrefix": "[parameters('vmNamePrefix')]",
-    "imagePublisher": "Cononical",
+    "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
     "vhdStorageName": "[parameters('storageAccountName')]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
@@ -133,10 +133,22 @@
   },
   "resources": [
     {
+      "name": "[parameters('publicIpAddressName')]",
+      "type": "Microsoft.Network/publicIpAddresses",
+      "apiVersion": "2016-03-30",
+      "location": "[resourcegroup().location]",
+      "properties": {
+        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+      }
+    },
+    {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(variables('vmNamePrefix'), variables('networkInterfaceNamePrefix'), copyindex())]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+      ],
       "tags": {
         "displayName": "NetworkInterface"
       },
@@ -150,6 +162,9 @@
             "name": "[concat(variables('vmNamePrefix'), 'ipconfig', copyindex())]",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]"
+              },
               "subnet": {
                 "id": "[variables('subnetRef')]"
               }
@@ -239,36 +254,27 @@
       ]
     },
     {
-      "name": "[parameters('publicIpAddressName')]",
-      "type": "Microsoft.Network/publicIpAddresses",
+      "name": "[parameters('networkSecurityGroupName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2016-03-30",
-      "location": "[resourcegroup().location]",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
-      }
-    },
-      {
-        "name": "[parameters('networkSecurityGroupName')]",
-        "type": "Microsoft.Network/networkSecurityGroups",
-        "apiVersion": "2016-03-30",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "default-allow-all",
-              "properties": {
-                "priority": 1000,
-                "sourceAddressPrefix": "*",
-                "protocol": "*",
-                "destinationPortRange": "*",
-                "access": "Allow",
-                "direction": "Inbound",
-                "sourcePortRange": "*",
-                "destinationAddressPrefix": "*"
-              }
+        "securityRules": [
+          {
+            "name": "default-allow-all",
+            "properties": {
+              "priority": 1000,
+              "sourceAddressPrefix": "*",
+              "protocol": "*",
+              "destinationPortRange": "*",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
             }
-          ]
-        }
+          }
+        ]
       }
-      ]
     }
+  ]
+ }
