@@ -214,7 +214,7 @@
       },
       "resources": [
         {
-          "name": "[concat(variables('vmNamePrefix'), copyindex(),'/CustomScriptForLinux')]",
+          "name": "CustomScriptForLinux",
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "apiVersion": "2015-06-15",
