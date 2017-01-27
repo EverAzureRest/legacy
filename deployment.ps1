@@ -29,9 +29,9 @@ $vnetTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/vnet
 $storageTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/storageaccount.json",
 $panVMTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/panVM.json",
 $natVMUri = "https://raw.githubusercontent.com/lorax79/legacy/master/natVM.json",
-$testVMTemplateUri = "https://raw.githubusercontent.com/lorax79/AzureTemplates/master/avm-base-bare.json",
-$testVM1NamePrefix = "TestVM0",
-$testVM2NamePrefix = "TestVM1",
+$testVMTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/testvms.json",
+$testVM1Name = "TestVM0",
+$testVM2Name = "TestVM1",
 [switch]$cleanup
 )
 
@@ -184,52 +184,30 @@ else {
     }
 
 #Build the params for the test VMs
-$testvm1parmas = @{
+$testvmsparmas = @{
     'adminUsername' = $localadminUserName;
-    'vmNamePrefix' = $testVM1NamePrefix;
+    'vm1Name' = $testVM1Name;
+    'vm2Name' = $testVM2Name;
     'virtualNetworkName' = $vnetName;
     'virtualNetworkResourceGroup' = $vnetRG;
-    'subnetName' = $noTrustSubnetName;
-    'storageAccountName' = $storageName
-}
-
-$testvm2params = @{
-    'adminUsername' = $localadminUserName;
-    'vmNamePrefix' = $testVM2NamePrefix;
-    'virtualNetworkName' = $vnetName;
-    'virtualNetworkResourceGroup' = $vnetRG;
-    'subnetName' = $medTrustSubnetName;
-    'storageAccountName' = $storageName
+    'subnet1Name' = $noTrustSubnetName;
+    'subnet2Name' = $medTrustSubnetName;
+    'storageAccountName' = $storageName;
+    'publicIPAddressName' = "TestVMPublicIP"
 }
 
 #Check for test VM 1 and deploy if it doesn't Exist
-Write-Verbose "Checking for TestVM1..."
-if (!(Get-AzureRmVM -Name ($testVM1NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
+Write-Verbose "Checking for TestVMs..."
+if (!(Get-AzureRmVM -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params.subnetname)"
 try {
-    New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm1parmas
+    New-AzureRmResourceGroupDeployment -Name TestVMs -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvmsparmas
     }
 catch {
-    throw "Error creating TestVM1. See Error Logs"
+    throw "Error creating TestVMs. See Error Logs"
     }
 }
 else {
-    Write-Verbose "The TestVM1 Exists already. Continuing"
+    Write-Verbose "The TestVMs Exists already. Continuing"
     }
-
-#Check for test VM2 and deploy if it doesn't Exist
-Write-Verbose "Checking for TestVM2..."
-if (!(Get-AzureRmVM -Name ($testVM2NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
-Write-Verbose "Deploying 2nd TestVM to subnet $($testvm2params.subnetname)"
-try {
-    New-AzureRmResourceGroupDeployment -Name TestVM2 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm2parmas
-    }
-catch {
-    throw "Error creating TestVM2. See Error Logs"
-    }
-}
-else {
-    Write-Verbose "The TestVM2 Exists already. Continuing"
-    }
-
 }

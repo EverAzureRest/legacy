@@ -58,27 +58,17 @@
         "description": "Size of the virtual machine, must be available in the virtual machine's location"
       }
     },
-    "numberOfInstances": {
-      "type": "int",
-      "minValue": 1,
-      "defaultValue": 1,
-      "maxValue": 10,
-      "metadata": {
-        "description": "Number of VM instances to be created behind internal load balancer control"
-      }
-    },
-    "vmNamePrefix": {
+    "vm1Name": {
       "type": "string",
       "metadata": {
-        "description": "String to prefix the generation of the VM Name"
+        "description": "Name of the 1st VM"
       }
     },
-    "vmPriority": {
-      "type": "string",
-      "defaultValue": "9",
-      "metadata": {
-        "description": "Parameter for the VM Priority Tag"
-      }
+    "vm2Name": {
+        "type": "string",
+        "metadata": {
+            "description": "Name of the 2nd VM"
+        }
     },
     "virtualNetworkName": {
       "type": "string"
@@ -86,14 +76,14 @@
     "virtualNetworkResourceGroup": {
       "type": "string"
     },
-    "subnetName": {
+    "subnet1Name": {
       "type": "string"
+    },
+    "subnet2Name": {
+        "type": "string"
     },
     "storageAccountName": {
       "type": "string"
-    },
-    "commandToExecute": {
-      "type": "securestring"
     },
     "publicIPAddressName": {
       "type": "string",
@@ -120,16 +110,12 @@
     }
   },
   "variables": {
-    "vmNamePrefix": "[parameters('vmNamePrefix')]",
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
     "vhdStorageName": "[parameters('storageAccountName')]",
-    "virtualNetworkName": "[parameters('virtualNetworkName')]",
-    "vnetId": "[resourceid(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "virtualNetworkSubnetName": "[parameters('subnetName')]",
-    "subnetRef": "[concat(variables('vnetId'), '/subnets/', variables('virtualNetworkSubnetName'))]",
-    "networkInterfaceNamePrefix": "VNic",
-    "VMPriority": "[parameters('vmPriority')]"
+    "vnetId": "[resourceid(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('subnet1Name'))]",
+    "subnet2Ref": "[concat(variables('vnetId'), '/subnets/', parameters('subnet2name'))]"
   },
   "resources": [
     {
@@ -153,8 +139,8 @@
             "properties": {
               "priority": 1000,
               "sourceAddressPrefix": "*",
-              "protocol": "*",
-              "destinationPortRange": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "22",
               "access": "Allow",
               "direction": "Inbound",
               "sourcePortRange": "*",
@@ -167,7 +153,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('vmNamePrefix'), variables('networkInterfaceNamePrefix'), copyindex())]",
+      "name": "[concat(parameters('vm1Name'), '-eth0')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
@@ -175,22 +161,43 @@
       "tags": {
         "displayName": "NetworkInterface"
       },
-      "copy": {
-        "name": "nicLoop",
-        "count": "[parameters('numberOfInstances')]"
-      },
       "properties": {
         "ipConfigurations": [
           {
-            "name": "[concat(variables('vmNamePrefix'), 'ipconfig', copyindex())]",
+            "name": "[concat(parameters('vm1Name'), '-ipconfig')]",
             "properties": {
               "networkSecurityGroup": "[resourceID('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName')",
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddressName'))]"
               },
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[variables('subnet1Ref')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('vm2Name'), '-eth0')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+      ],
+      "tags": {
+        "displayName": "NetworkInterface"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[concat(parameters('vm2Name'), '-ipconfig')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnet2Ref')]"
               }
             }
           }
@@ -200,25 +207,17 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(variables('vmNamePrefix'), copyindex())]",
-      "copy": {
-        "count": "[parameters('numberOfInstances')]",
-        "name": "virtualMachineLoop"
-      },
+      "name": "[parameters('vm1Name')]",
       "location": "[resourceGroup().location]",
       "tags": {
-        "displayName": "VirtualMachines",
-        "priority": "[variables('VMPriority')]"
+        "displayName": "[parameters('vm1Name')]"
       },
-      "dependsOn": [
-        "nicLoop"
-      ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[concat(variables('vmNamePrefix'), copyIndex())]",
+          "computerName": "[concat(parameters('vm1Name')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -232,7 +231,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://', variables('vhdStorageName'), '.blob.core.windows.net/vhds/', variables('vmNamePrefix'), copyIndex(), 'osdisk', '.vhd')]"
+              "uri": "[concat('http://', variables('vhdStorageName'), '.blob.core.windows.net/vhds/', parameters('vm1Name'), 'osdisk', '.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -241,7 +240,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNamePrefix'), variables('networkInterfaceNamePrefix'), copyindex()))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vm1Name'), '-eth0'))]"
             }
           ]
         },
@@ -250,32 +249,54 @@
             "enabled": false
           }
         }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('vm2Name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[parameters('vm2Name')]"
       },
-      "resources": [
-        {
-          "name": "CustomScriptForLinux",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2015-06-15",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(variables('vmNamePrefix'), copyindex()))]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.OSTCExtensions",
-            "type": "CustomScriptForLinux",
-            "typeHandlerVersion": "1.4",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "https://raw.githubusercontent.com/lorax79/legacy/master/nat-iptables.sh"
-              ]
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('vm1Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[parameters('imgSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://', variables('vhdStorageName'), '.blob.core.windows.net/vhds/', parameters('vm2Name'), 'osdisk', '.vhd')]"
             },
-            "protectedSettings": {
-              "commandToExecute": "[parameters('commandToExecute')]"
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vm2Name'), '-eth0'))]"
             }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": false
           }
         }
-      ]
+      }
     }
   ]
  }
