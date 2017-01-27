@@ -7,7 +7,7 @@ $vnetName = "LegacyVnet",
 $vnetRG = "LegacyVNETRG",
 $vnetIPRange = "10.248.0.0/16",
 $gatewaySubnetName = "GatewaySubnet",
-$gatewaySubnetCIDR = "10.248.1.0/29",
+$gatewaySubnetCIDR = "10.248.1.0/27",
 $dmzSubnetName = "DmzSubnet",
 $dmzSubnetCIDR = "10.248.4.0/22",
 $mgmntSubnetName = "LhMgmtSubnet",
@@ -218,11 +218,11 @@ else {
     }
 
 #Check for test VM2 and deploy if it doesn't Exist
-Write-Verbose "Checking for TestVM2"
+Write-Verbose "Checking for TestVM2..."
 if (!(Get-AzureRmVM -Name ($testVM2NamePrefix + '0') -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying 2nd TestVM to subnet $($testvm2params.subnetname)"
 try {
-    New-AzureRmResourceGroupDeployment -Name TestVM1 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm2parmas
+    New-AzureRmResourceGroupDeployment -Name TestVM2 -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvm2parmas
     }
 catch {
     throw "Error creating TestVM2. See Error Logs"
