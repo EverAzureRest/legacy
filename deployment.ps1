@@ -193,10 +193,11 @@ $testvmsparmas = @{
     'subnet1Name' = $noTrustSubnetName;
     'subnet2Name' = $medTrustSubnetName;
     'storageAccountName' = $storageName;
-    'publicIPAddressName' = "TestVMPublicIP"
+    'publicIPAddressName' = "TestVMPublicIP";
+    'networkSecurityGroupName' = "testvm1nsg"
 }
 
-#Check for test VM 1 and deploy if it doesn't Exist
+#Check for test VMs and deploy if it doesn't Exist
 Write-Verbose "Checking for TestVMs..."
 if (!(Get-AzureRmVM -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
 Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params.subnetname)"
