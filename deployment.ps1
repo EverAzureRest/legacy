@@ -21,6 +21,7 @@ $noTrustSubnetCIDR = "10.248.12.0/22",
 $subscriptionName = "jorsmith-SCDEMO",
 $panRGName = "PaloAltoRG",
 $panVMName = "LHPanAz01",
+$panVMLicense = "byol",
 $vmRGName = "TestVMRG",
 $natVMRg = "NATVMRG",
 $natVMNamePrefix = "lhNATvm0",
@@ -140,6 +141,7 @@ $panParams = @{
     'PublicIPAddressName' = "lhpanpublicip";
     'storageAccountName' = $storageName;
     'storageAccountExistingRG' = $storageRG;
+    'licenseType' = $panVMLicense
 }
 
 #Check for Palo Alto VM and deploy if it doesn't exist
@@ -212,3 +214,30 @@ else {
     Write-Verbose "The TestVMs Exists already. Continuing"
     }
 }
+
+#Create Route Table and routes
+#Build Params
+<#
+$udrParams = @{
+    'route1Name' = "";
+    'route2Name' = "";
+    'location' = $deploymentLocation;
+    'routeTableName' = "";
+    'targetCIDR1' = $medTrustSubnetCIDR;
+    'subnet1Name' = $noTrustSubnetName
+    'targetCIDR2' = $noTrustSubnetCIDR;
+    'subnet2Name' = $noTrustSubnetName;
+    'panTrustIP' = "10.248.12.4";
+    'vnetName' = $vnetName;
+    'vnetResourceGroupName' = $vnetRG
+}
+#>
+
+$table = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "TestUDR"
+
+Get-AzureRmRouteTable $table | Add-AzureRmRouteConfig -Name "medtrustToNotrust" -AddressPrefix $noTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" | Set-AzureRmRouteTable
+
+Get-AzureRmRouteTable $table | Add-AzureRmRouteConfig -Name "notrustToMedtrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" | Set-AzureRmRouteTable
+
+Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg | Set-AzureRmVirtualNetworkSubnetConfig -Name $medTrustSubnetName -RouteTable $table
+Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg | Set-AzureRmVirtualNetworkSubnetConfig -Name $noTrustSubnetName -RouteTable $table

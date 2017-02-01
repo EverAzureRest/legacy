@@ -211,11 +211,18 @@
       "metadata": {
         "description": "SSH rsa public key file as a string."
       }
+    },
+    "licenseType": {
+      "type": "string",
+      "allowedValues": [
+        "byol",
+        "payg"
+      ]
     }
   },
   "variables": {
     "imagePublisher": "paloaltonetworks",
-    "imageSku": "byol",
+    "imageSku": "[parameters('licenseType')]",
     "imageOffer": "vmseries1",
     "nsgName": "DefaultNSG",
     "nicName": "[concat(parameters('vmName'), '-eth')]",
