@@ -18,7 +18,7 @@ $highTrustSubnetName = "HiTrustSubnet",
 $highTrustSubnetCIDR = "10.248.20.0/22",
 $noTrustSubnetName = "NoTrustSubnet",
 $noTrustSubnetCIDR = "10.248.12.0/22",
-$subscriptionName = "jorsmith-SCDEMO",
+$subscriptionName = "jorsmith-SCDemo",
 $panRGName = "PaloAltoRG",
 $panVMName = "LHPanAz01",
 $panVMLicense = "byol",
@@ -215,11 +215,11 @@ catch {
 else {
     Write-Verbose "The TestVMs Exists already. Continuing"
     }
-}
+
 
 #Create Route Table and routes
 
-
+Write-Verbose "Creating User Defined Routes"
 $route1 = New-AzureRmRouteConfig -Name "medTrustToHighTrust" -AddressPrefix $highTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" 
 $route2 = New-AzureRmRouteConfig -Name "highTrustToMedTrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" 
 
@@ -232,3 +232,4 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $medTrustSubne
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $highTrustSubnetName -AddressPrefix $highTrustSubnetCIDR -RouteTable $table2
 
 Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
+}

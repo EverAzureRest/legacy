@@ -156,7 +156,7 @@
       "name": "[concat(parameters('vm1Name'), '-eth0')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpAddressName'))]"
       ],
       "tags": {
         "displayName": "NetworkInterface"
@@ -169,7 +169,7 @@
               "networkSecurityGroup": "[resourceID('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName')",
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddressName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressName'))]"
               },
               "subnet": {
                 "id": "[variables('subnet1Ref')]"
@@ -209,6 +209,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm1Name')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces', parameters('vm1Name'), '-eth0')]"
+      ],
       "tags": {
         "displayName": "[parameters('vm1Name')]"
       },
@@ -256,6 +259,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm2Name')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces', parameters('vm2Name'), '-eth0')]"
+      ],
       "tags": {
         "displayName": "[parameters('vm2Name')]"
       },
