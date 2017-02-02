@@ -26,11 +26,13 @@ $vmRGName = "TestVMRG",
 $natVMRg = "NATVMRG",
 $natVMNamePrefix = "lhNATvm0",
 $deploymentLocation = "WestUS2",
-$vnetTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/vnet.json",
-$storageTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/storageaccount.json",
-$panVMTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/panVM.json",
-$natVMUri = "https://raw.githubusercontent.com/lorax79/legacy/master/natVM.json",
-$testVMTemplateUri = "https://raw.githubusercontent.com/lorax79/legacy/master/testvms.json",
+$baseuri = "https://raw.githubusercontent.com/lorax79/legacy/master",
+#to use locally, clone the $baseuri using git and dot source from the cloned directory. Don't forget to change the $basuri to the local cloned repository
+$vnetTemplateUri = "$baseuri/vnet.json",
+$storageTemplateUri = "$baseuri/storageaccount.json",
+$panVMTemplateUri = "$baseuri/panVM.json",
+$natVMUri = "$baseuri/natVM.json",
+$testVMTemplateUri = "$baseuri/testvms.json",
 $testVM1Name = "TestVM0",
 $testVM2Name = "TestVM1",
 [switch]$cleanup
@@ -192,7 +194,7 @@ $testvmsparmas = @{
     'vm2Name' = $testVM2Name;
     'virtualNetworkName' = $vnetName;
     'virtualNetworkResourceGroup' = $vnetRG;
-    'subnet1Name' = $noTrustSubnetName;
+    'subnet1Name' = $highTrustSubnetName;
     'subnet2Name' = $medTrustSubnetName;
     'storageAccountName' = $storageName;
     'publicIPAddressName' = "TestVMPublicIP";
@@ -201,7 +203,7 @@ $testvmsparmas = @{
 
 #Check for test VMs and deploy if it doesn't Exist
 Write-Verbose "Checking for TestVMs..."
-if (!(Get-AzureRmVM -ResourceGroupName $vmRGName -ea SilentlyContinue)) {
+if (!(Get-AzureRmVM -Name $testvm2Name -ResourceGroupName $vmRGName -ea SilentlyContinue) -or !(Get-AzureRmVM -Name $testVM1Name -ResourceGroupName $vmRGName -ErrorAction SilentlyContinue)) {
 Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params.subnetname)"
 try {
     New-AzureRmResourceGroupDeployment -Name TestVMs -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvmsparmas
@@ -216,28 +218,17 @@ else {
 }
 
 #Create Route Table and routes
-#Build Params
-<#
-$udrParams = @{
-    'route1Name' = "";
-    'route2Name' = "";
-    'location' = $deploymentLocation;
-    'routeTableName' = "";
-    'targetCIDR1' = $medTrustSubnetCIDR;
-    'subnet1Name' = $noTrustSubnetName
-    'targetCIDR2' = $noTrustSubnetCIDR;
-    'subnet2Name' = $noTrustSubnetName;
-    'panTrustIP' = "10.248.12.4";
-    'vnetName' = $vnetName;
-    'vnetResourceGroupName' = $vnetRG
-}
-#>
 
-$table = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "TestUDR"
 
-Get-AzureRmRouteTable $table | Add-AzureRmRouteConfig -Name "medtrustToNotrust" -AddressPrefix $noTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" | Set-AzureRmRouteTable
+$route1 = New-AzureRmRouteConfig -Name "medTrustToHighTrust" -AddressPrefix $highTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" 
+$route2 = New-AzureRmRouteConfig -Name "highTrustToMedTrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" 
 
-Get-AzureRmRouteTable $table | Add-AzureRmRouteConfig -Name "notrustToMedtrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress "10.248.12.4" | Set-AzureRmRouteTable
+$table1 = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "medToHighRT" -Location $deploymentLocation -Route $route1
+$table2 = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "highToMedRT" -Location $deploymentLocation -Route $route2
 
-Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg | Set-AzureRmVirtualNetworkSubnetConfig -Name $medTrustSubnetName -RouteTable $table
-Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg | Set-AzureRmVirtualNetworkSubnetConfig -Name $noTrustSubnetName -RouteTable $table
+$vnet = Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg
+
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $medTrustSubnetName -AddressPrefix $medTrustSubnetCIDR -RouteTable $table1
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $highTrustSubnetName -AddressPrefix $highTrustSubnetCIDR -RouteTable $table2
+
+Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
