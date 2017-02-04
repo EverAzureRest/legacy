@@ -209,9 +209,6 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm1Name')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces', parameters('vm1Name'), '-eth0')]"
-      ],
       "tags": {
         "displayName": "[parameters('vm1Name')]"
       },
@@ -259,9 +256,6 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm2Name')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces', parameters('vm2Name'), '-eth0')]"
-      ],
       "tags": {
         "displayName": "[parameters('vm2Name')]"
       },
