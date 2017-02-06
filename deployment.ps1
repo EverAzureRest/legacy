@@ -1,6 +1,7 @@
 ﻿[cmdletbinding()]
 param(
-$localadminUserName = "LMajors",
+[Parameter(Mandatory=$True)]
+$localadminUserName,
 $storageRG = "LegacySG",
 $storageName = "legacystandardsa",
 $vnetName = "LegacyVnet",
@@ -18,7 +19,8 @@ $highTrustSubnetName = "HiTrustSubnet",
 $highTrustSubnetCIDR = "10.248.20.0/22",
 $noTrustSubnetName = "NoTrustSubnet",
 $noTrustSubnetCIDR = "10.248.12.0/22",
-$subscriptionName = "Broken Azure Subscription",
+[Parameter(Mandatory=$True)]
+$subscriptionName,
 $panRGName = "PaloAltoRG",
 $panVMName = "LHPanAz01",
 $panVMLicense = "byol",

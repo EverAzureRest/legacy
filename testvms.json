@@ -115,13 +115,14 @@
     "vhdStorageName": "[parameters('storageAccountName')]",
     "vnetId": "[resourceid(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('subnet1Name'))]",
-    "subnet2Ref": "[concat(variables('vnetId'), '/subnets/', parameters('subnet2name'))]"
+    "subnet2Ref": "[concat(variables('vnetId'), '/subnets/', parameters('subnet2name'))]",
+    "apiVersion": "2015-06-15"
   },
   "resources": [
     {
       "name": "[parameters('publicIpAddressName')]",
       "type": "Microsoft.Network/publicIpAddresses",
-      "apiVersion": "2016-03-30",
+      "apiVersion": "2015-06-15",
       "location": "[resourcegroup().location]",
       "properties": {
         "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
@@ -130,7 +131,7 @@
     {
       "name": "[parameters('networkSecurityGroupName')]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2016-03-30",
+      "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "properties": {
         "securityRules": [
@@ -209,6 +210,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm1Name')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('vm1Name'), '-eth0')]"
+      ],
       "tags": {
         "displayName": "[parameters('vm1Name')]"
       },
@@ -256,6 +260,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vm2Name')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('vm2Name'), '-eth0')]"
+      ],
       "tags": {
         "displayName": "[parameters('vm2Name')]"
       },
