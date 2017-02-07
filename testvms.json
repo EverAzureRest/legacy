@@ -211,7 +211,7 @@
       "name": "[parameters('vm1Name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceid(concat('Microsoft.Network/networkInterfaces/', parameters('vm1Name'), '-eth0'))]"
+        "[(concat('Microsoft.Network/networkInterfaces/', parameters('vm1Name'), '-eth0'))]"
       ],
       "tags": {
         "displayName": "[parameters('vm1Name')]"
@@ -261,7 +261,7 @@
       "name": "[parameters('vm2Name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceid(concat('Microsoft.Network/networkInterfaces/', parameters('vm2Name'), '-eth0'))]"
+        "[(concat('Microsoft.Network/networkInterfaces/', parameters('vm2Name'), '-eth0'))]"
       ],
       "tags": {
         "displayName": "[parameters('vm2Name')]"
