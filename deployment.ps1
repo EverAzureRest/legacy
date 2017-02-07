@@ -195,7 +195,7 @@ else {
     }
 
 #Build the params for the test VMs
-$testvmsparmas = @{
+$testvmsparams = @{
     'adminUsername' = $localadminUserName;
     'vm1Name' = $testVM1Name;
     'vm2Name' = $testVM2Name;
@@ -213,7 +213,7 @@ Write-Verbose "Checking for TestVMs..."
 if (!(Get-AzureRmVM -Name $testvm2Name -ResourceGroupName $vmRGName -ea SilentlyContinue) -or !(Get-AzureRmVM -Name $testVM1Name -ResourceGroupName $vmRGName -ErrorAction SilentlyContinue)) {
 Write-Verbose "Deploying 1st TestVM to subnet $($testvm1params.subnetname)"
 try {
-    New-AzureRmResourceGroupDeployment -Name TestVMs -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvmsparmas
+    New-AzureRmResourceGroupDeployment -Name TestVMs -ResourceGroupName $vmRGName -Mode Incremental -TemplateUri $testVMTemplateUri -TemplateParameterObject $testvmsparams
     }
 catch {
     throw "Error creating TestVMs. See Error Logs"
