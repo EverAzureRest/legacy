@@ -230,7 +230,7 @@ Write-Verbose "Creating User Defined Routes"
 $route1 = New-AzureRmRouteConfig -Name "medTrustToHighTrust" -AddressPrefix $highTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $route2 = New-AzureRmRouteConfig -Name "highTrustToMedTrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $defaultroute = New-AzureRmRouteConfig -Name "DefaultOut"  -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
-$routeToNat = New-AzureRmRouteConfig -Name "unTrustToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VnetLocal -NextHopIpAddress "10.248.4.4"
+$routeToNat = New-AzureRmRouteConfig -Name "unTrustToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress "10.248.4.4"
 $routeToInternet = New-AzureRmRouteConfig -Name "DefaultToInternet" -AddressPrefix "0.0.0.0/0" -NextHopType Internet
 $routeToPanUntrust = New-AzureRmRouteConfig -Name "toUnTrust" -AddressPrefix "10.248.0.0/16" -NextHopType VirtualAppliance -NextHopIpAddress $panUnTrustIP
 
