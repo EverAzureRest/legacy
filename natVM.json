@@ -114,6 +114,10 @@
       "metadata": {
         "description": "Name of the NSG for the NAT subnet"
       }
+    },
+    "commandToExecute": {
+      "type": "string",
+      "defaultValue": "sh nat-iptables.sh"
     }
   },
   "variables": {
