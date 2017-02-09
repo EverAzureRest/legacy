@@ -92,9 +92,6 @@
     "storageAccountName": {
       "type": "string"
     },
-    "commandToExecute": {
-      "type": "securestring"
-    },
     "publicIPAddressName": {
       "type": "string",
       "metadata": {
