@@ -2,17 +2,24 @@
 param(
 [Parameter(Mandatory=$True)]
 $localadminUserName,
-$storageRG = "LegacySG",
-$storageName = "legacystandardsa",
-$vnetName = "LegacyVnet",
-$vnetRG = "LegacyVNETRG",
+$storageRG = "LH-INF-PD-SA-STD-RG",
+$storageName = "lhinfpdsastd",
+$vnetName = "LH-INF-PD-VNET1",
+$vnetRG = "LH-INF-PD-LegecyVnet-RG",
 $vnetIPRange = "10.248.0.0/16",
-$untrustSubnetName = "UntrustSubnet",
-$untrustSubnetCIDR = "10.248.1.0/24",
-$panUnTrustIP = "10.248.1.4",
-$panPublicDNSName = "lhpanazpublicname",
-$natSubnetName = "DmzSubnet",
-$natSubnetCIDR = "10.248.4.0/22",
+$expressRouteSubnetName = "ExpressRoute",
+$expressRouteSubnetPrefix = "10.248.0.32/27",
+$NATSubnetName = "DMZNATSubnet",
+$NATSubnetPrefix = "10.248.0.64/27",
+$gatewaySubnetName = "GatewaySubnet",
+$gatewaySubnetPrefix = "10.248.0.0/28",
+$securitySubnetName = "SecuritySubnet",
+$securitySubnetPrefix = "10.248.12.0/22",
+[parameter(Mandatory=$True)]
+$panPublicDNSName,
+$DMZSubentName = "DmzSubnet",
+$DMZSubnetPrefix = "10.248.4.0/22",
+$panUntrustIP = "10.248.4.4",
 $mgmntSubnetName = "LhMgmtSubnet",
 $mgmtSubnetCIDR = "10.248.36.0/22",
 $panMgmtIP = "10.248.36.4",
@@ -21,17 +28,19 @@ $medTrustSubnetCIDR = "10.248.16.0/22",
 $highTrustSubnetName = "HiTrustSubnet",
 $highTrustSubnetCIDR = "10.248.20.0/22",
 $noTrustSubnetName = "NoTrustSubnet",
-$noTrustSubnetCIDR = "10.248.12.0/22",
+$noTrustSubnetCIDR = "10.248.8.0/22",
 $panTrustIP = "10.248.12.4",
 [Parameter(Mandatory=$True)]
 $subscriptionName,
-$panRGName = "PaloAltoRG",
+$panRGName = "LH-INF-PD-PAN-RG",
 $panVMName = "LHPanAz01",
 $panVMLicense = "byol",
-$vmRGName = "TestVMRG",
-$natVMRg = "NATVMRG",
-$natPublicIP = "lhNatVMPublicIP",
-$natVMNamePrefix = "lhNATvm0",
+$vmRGName = "LH-INF-TEST-VM-RG",
+$natVMRg = "LH-INF-PD-NAT-RG",
+$natVMPrivateIP = "10.248.0.68",
+[parameter(Mandatory=$True)]
+$natPublicIPDNSName,
+$natVMNamePrefix = "lh-inf-pd-NATvm0",
 $deploymentLocation = "WestUS2",
 $baseuri = "https://raw.githubusercontent.com/lorax79/legacy/master",
 #to use locally, clone the $baseuri using git and dot source from the cloned directory. Don't forget to change the $basuri to the local cloned repository
@@ -45,9 +54,16 @@ $testVM2Name = "TestVM1",
 [switch]$cleanup
 )
 
-##Login to an Azure Account and focus on the defined subscription
+##Check for a session and Login to an Azure Account and focus on the defined subscription if not found
+
+if (!(Get-AzureRmSubscription -SubscriptionName $subscriptionName -ea 0))
+{
 Login-AzureRmAccount
 Get-AzureRmSubscription -SubscriptionName $subscriptionName | Select-AzureRmSubscription
+}
+else {
+    Select-AzureRmSubscription -SubscriptionName $subscriptionName
+}
 
 $rgs = $panRGName,$natVMRg,$vmRGName,$storageRG,$vnetRG
 
@@ -77,18 +93,24 @@ foreach ($rg in $rgs) {
 $vnetParams = @{
     'vnetName' = $vnetName;
     'vnetAddressPrefix' = $vnetIPRange;
-    'subnet1Prefix' = $untrustSubnetCIDR;
-    'subnet1Name' = $untrustSubnetName
-    'subnet2Prefix' = $natSubnetCIDR;
-    'subnet2Name' = $natSubnetName;
-    'subnet3Prefix' = $medTrustSubnetCIDR;
-    'subnet3Name' = $medTrustSubnetName;
-    'subnet4Prefix' = $highTrustSubnetCIDR;
-    'subnet4Name' = $highTrustSubnetName;
-    'subnet5Prefix' = $mgmtSubnetCIDR;
-    'subnet5Name' = $mgmntSubnetName;
-    'subnet6Prefix' = $noTrustSubnetCIDR;
-    'subnet6Name' = $noTrustSubnetName
+    'subnet1Prefix' = $gatewaySubnetPrefix;
+    'subnet1Name' = $gatewaySubnetName;
+    'subnet2Prefix' = $expressRouteSubnetPrefix;
+    'subnet2Name' = $expressRouteSubnetName;
+    'subnet3Prefix' = $mgmtSubnetCIDR;
+    'subnet3Name' = $mgmntSubnetName;
+    'subnet4Prefix' = $securitySubnetPrefix;
+    'subnet4Name' = $securitySubnetName;
+    'subnet5Prefix' = $medTrustSubnetCIDR;
+    'subnet5Name' = $medTrustSubnetName;
+    'subnet6Prefix' = $highTrustSubnetCIDR;
+    'subnet6Name' = $highTrustSubnetName;
+    'subnet7Prefix' = $DMZSubnetPrefix;
+    'subnet7Name' = $DMZSubentName;
+    'subnet8Prefix' = $noTrustSubnetCIDR;
+    'subnet8Name' = $noTrustSubnetName;
+    'subnet9Prefix' = $NATSubnetPrefix;
+    'subnet9Name' = $NATSubnetName
 }
 
 #Check for and Deploy the Vnet if it doesn't exist
@@ -137,11 +159,11 @@ $panParams = @{
     'virtualNetworkAddressPrefix' = $vnetIPRange;
     'virtualNetworkExistingRGName' = $vnetRG;
     'subnet0Name' = $mgmntSubnetName;
-    'subnet1Name' = $untrustSubnetName;
-    'subnet2Name' = $noTrustSubnetName;
+    'subnet1Name' = $noTrustSubnetName;
+    'subnet2Name' = $securitySubnetName;
     'subnet0Prefix' = $mgmtSubnetCIDR;
-    'subnet1Prefix' = $untrustSubnetCIDR;
-    'subnet2Prefix' = $noTrustSubnetCIDR;
+    'subnet1Prefix' = $noTrustSubnetCIDR;
+    'subnet2Prefix' = $securitySubnetPrefix;
     'subnet0StartAddress' = $panMgmtIP;
     'subnet1StartAddress' = $panUnTrustIP;
     'subnet2StartAddress' = $panTrustIP;
@@ -175,7 +197,7 @@ $natVMParams = @{
     'subnetName' = $natSubnetName;
     'storageAccountName' = $storageName;
     'commandToExecute' = "sh nat-iptables.sh";
-    'publicIpAddressName' = $natPublicIP;
+    'publicIpAddressName' = $natPublicIPDNSName;
     'networkSecurityGroupName' = "lhNatNSG"
 }
 
@@ -230,7 +252,7 @@ Write-Verbose "Creating User Defined Routes"
 $route1 = New-AzureRmRouteConfig -Name "medTrustToHighTrust" -AddressPrefix $highTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $route2 = New-AzureRmRouteConfig -Name "highTrustToMedTrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $defaultroute = New-AzureRmRouteConfig -Name "DefaultOut"  -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
-$routeToNat = New-AzureRmRouteConfig -Name "unTrustToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress "10.248.4.4"
+$routeToNat = New-AzureRmRouteConfig -Name "unTrustToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $natVMPrivateIP
 $routeToInternet = New-AzureRmRouteConfig -Name "DefaultToInternet" -AddressPrefix "0.0.0.0/0" -NextHopType Internet
 $routeToPanUntrust = New-AzureRmRouteConfig -Name "toUnTrust" -AddressPrefix "10.248.0.0/16" -NextHopType VirtualAppliance -NextHopIpAddress $panUnTrustIP
 
@@ -244,8 +266,8 @@ $vnet = Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg
 
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $medTrustSubnetName -AddressPrefix $medTrustSubnetCIDR -RouteTable $table1
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $highTrustSubnetName -AddressPrefix $highTrustSubnetCIDR -RouteTable $table2
-Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $untrustSubnetName -AddressPrefix $untrustSubnetCIDR -RouteTable $table3
-Set-AzureRMVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $natSubnetName -AddressPrefix $natSubnetCIDR -RouteTable $table4
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $noTrustSubnetName -AddressPrefix $noTrustSubnetCIDR -RouteTable $table3
+Set-AzureRMVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $NATSubnetName -AddressPrefix $NATSubnetPrefix -RouteTable $table4
 
 Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
 }

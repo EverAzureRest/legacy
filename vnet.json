@@ -87,6 +87,42 @@
       "metadata": {
         "description": "Subnet 6 Name"
       }
+    },
+    "subnet7Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 7 Prefix"
+      }
+    },
+    "subnet7Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 7 Name"
+      }
+    },
+    "subnet8Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 8 Prefix"
+      }
+    },
+    "subnet8Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 8 Name"
+      }
+    },
+    "subnet9Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 9 Prefix"
+      }
+    },
+    "subnet9Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 9 Name"
+      }
     }
   },
   "variables": {
@@ -139,6 +175,24 @@
               "name": "[parameters('subnet6Name')]",
               "properties": {
                 "addressPrefix": "[parameters('subnet6Prefix')]"
+              }
+            },
+            {
+              "name": "[parameters('subnet7Name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet7Prefix')]"
+              }
+            },
+            {
+              "name": "[parameters('subnet8Name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet8Prefix')]"
+              }
+            },
+            {
+              "name": "[parameters('subnet9Name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet9Prefix')]"
               }
             }
         ]
