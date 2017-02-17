@@ -53,15 +53,16 @@ $testVM2Name = "TestVM1",
 
 ##Check for a session and Login to an Azure Account and focus on the defined subscription if not found
 
-if (!(Get-AzureRmSubscription -SubscriptionName $subscriptionName -ea 0))
+<#if (!(Get-AzureRmSubscription -SubscriptionName $subscriptionName -ea 0))
 {
+#>
 Login-AzureRmAccount
 Get-AzureRmSubscription -SubscriptionName $subscriptionName | Select-AzureRmSubscription
-}
+<#}
 else {
     Select-AzureRmSubscription -SubscriptionName $subscriptionName
 }
-
+#>
 $rgs = $panRGName,$natVMRg,$vmRGName,$storageRG,$vnetRG
 
 #If cleanup switch is used, it will remove the entire environment
