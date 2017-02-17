@@ -1,7 +1,6 @@
 ﻿[cmdletbinding()]
 param(
-[Parameter(Mandatory=$True)]
-$localadminUserName,
+$localadminUserName = "LocalAdmin",
 $storageRG = "LH-INF-PD-SA-STD-RG",
 $storageName = "lhinfpdsastd",
 $vnetName = "LH-INF-PD-VNET1",
@@ -15,8 +14,7 @@ $gatewaySubnetName = "GatewaySubnet",
 $gatewaySubnetPrefix = "10.248.0.0/28",
 $securitySubnetName = "SecuritySubnet",
 $securitySubnetPrefix = "10.248.12.0/22",
-[parameter(Mandatory=$True)]
-$panPublicDNSName,
+$panPublicDNSName = "panpublicname",
 $DMZSubentName = "DmzSubnet",
 $DMZSubnetPrefix = "10.248.4.0/22",
 $panUntrustIP = "10.248.4.4",
@@ -33,13 +31,12 @@ $panTrustIP = "10.248.12.4",
 [Parameter(Mandatory=$True)]
 $subscriptionName,
 $panRGName = "LH-INF-PD-PAN-RG",
-$panVMName = "LHPanAz01",
+$panVMName = "lhinfpdpan01",
 $panVMLicense = "byol",
 $vmRGName = "LH-INF-TEST-VM-RG",
 $natVMRg = "LH-INF-PD-NAT-RG",
 $natVMPrivateIP = "10.248.0.68",
-[parameter(Mandatory=$True)]
-$natPublicIPDNSName,
+$natPublicIPDNSName = "natpublicname",
 $natVMNamePrefix = "lh-inf-pd-NATvm0",
 $deploymentLocation = "WestUS2",
 $baseuri = "https://raw.githubusercontent.com/lorax79/legacy/master",
@@ -159,10 +156,10 @@ $panParams = @{
     'virtualNetworkAddressPrefix' = $vnetIPRange;
     'virtualNetworkExistingRGName' = $vnetRG;
     'subnet0Name' = $mgmntSubnetName;
-    'subnet1Name' = $noTrustSubnetName;
+    'subnet1Name' = $DMZSubentName;
     'subnet2Name' = $securitySubnetName;
     'subnet0Prefix' = $mgmtSubnetCIDR;
-    'subnet1Prefix' = $noTrustSubnetCIDR;
+    'subnet1Prefix' = $DMZSubnetPrefix;
     'subnet2Prefix' = $securitySubnetPrefix;
     'subnet0StartAddress' = $panMgmtIP;
     'subnet1StartAddress' = $panUnTrustIP;
@@ -198,7 +195,7 @@ $natVMParams = @{
     'storageAccountName' = $storageName;
     'commandToExecute' = "sh nat-iptables.sh";
     'publicIpAddressName' = $natPublicIPDNSName;
-    'networkSecurityGroupName' = "lhNatNSG"
+    'networkSecurityGroupName' = "LH-INF-PD-NATVM-NSG"
 }
 
 #Check for the NAT VM and deploy if it doesn't exist
