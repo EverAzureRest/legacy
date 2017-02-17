@@ -28,8 +28,7 @@ sudo iptables -t nat -A POSTROUTING -j MASQUERADE
 # This will work only on Ubuntu
 sudo iptables-save -c > /etc/iptables.rules
 printf "#!/bin/sh \niptables-restore < /etc/iptables.rules\nexit 0\n" > /etc/network/if-pre-up.d/iptablesload
-printf "#!/bin/sh\niptables-save -c > /etc/iptables.rules\nif [ -f /etc/iptables.downrules ]; then\n iptables-restore < /etc/iptables.downrules\nfi\nexit 0\n" > /e
-tc/network/if-post-down.d/iptablessave
+printf "#!/bin/sh\niptables-save -c > /etc/iptables.rules\nif [ -f /etc/iptables.downrules ]; then\n iptables-restore < /etc/iptables.downrules\nfi\nexit 0\n" > /etc/network/if-post-down.d/iptablessave
 sudo chmod +x /etc/network/if-post-down.d/iptablessave
 sudo chmod +x /etc/network/if-pre-up.d/iptablesload
  

@@ -249,21 +249,21 @@ Write-Verbose "Creating User Defined Routes"
 $route1 = New-AzureRmRouteConfig -Name "medTrustToHighTrust" -AddressPrefix $highTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $route2 = New-AzureRmRouteConfig -Name "highTrustToMedTrust" -AddressPrefix $medTrustSubnetCIDR -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
 $defaultroute = New-AzureRmRouteConfig -Name "DefaultOut"  -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $panTrustIP
-$routeToNat = New-AzureRmRouteConfig -Name "unTrustToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $natVMPrivateIP
+$routeToNat = New-AzureRmRouteConfig -Name "DMZToNAT" -AddressPrefix "0.0.0.0/0" -NextHopType VirtualAppliance -NextHopIpAddress $natVMPrivateIP
 $routeToInternet = New-AzureRmRouteConfig -Name "DefaultToInternet" -AddressPrefix "0.0.0.0/0" -NextHopType Internet
-$routeToPanUntrust = New-AzureRmRouteConfig -Name "toUnTrust" -AddressPrefix "10.248.0.0/16" -NextHopType VirtualAppliance -NextHopIpAddress $panUnTrustIP
+$routeToPanUntrust = New-AzureRmRouteConfig -Name "toPANUnTrust" -AddressPrefix "10.248.0.0/16" -NextHopType VirtualAppliance -NextHopIpAddress $panUnTrustIP
 
 
 $table1 = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "medTrustSubnetRT" -Location $deploymentLocation -Route $route1, $defaultroute
 $table2 = New-AzureRmRouteTable -ResourceGroupName $vnetRG -Name "highTrustSubnetRT" -Location $deploymentLocation -Route $route2
-$table3 = New-AzureRMRouteTable -ResourceGroupName $vnetRG -Name "UntrustsubnetRT" -Location $deploymentLocation -Route $routeToNat
+$table3 = New-AzureRMRouteTable -ResourceGroupName $vnetRG -Name "DMZsubnetRT" -Location $deploymentLocation -Route $routeToNat
 $table4 = New-AzureRMRouteTable -ResourceGroupName $vnetRG -Name "NatSubnetRT" -Location $deploymentLocation -Route $routeToInternet, $routeToPanUntrust
 
 $vnet = Get-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $vnetrg
 
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $medTrustSubnetName -AddressPrefix $medTrustSubnetCIDR -RouteTable $table1
 Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $highTrustSubnetName -AddressPrefix $highTrustSubnetCIDR -RouteTable $table2
-Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $noTrustSubnetName -AddressPrefix $noTrustSubnetCIDR -RouteTable $table3
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $DMZSubentName -AddressPrefix $DMZSubnetPrefix -RouteTable $table3
 Set-AzureRMVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $NATSubnetName -AddressPrefix $NATSubnetPrefix -RouteTable $table4
 
 Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
