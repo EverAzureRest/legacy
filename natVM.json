@@ -135,11 +135,11 @@
   "resources": [
     {
       "name": "[parameters('publicIpAddressName')]",
-      "type": "Microsoft.Network/publicIpAddresses",
+      "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2016-03-30",
       "location": "[resourcegroup().location]",
       "properties": {
-        "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+        "publicIPAllocationMethod": "[parameters('publicIpAddressType')]"
       }
     },
     {
