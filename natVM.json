@@ -182,6 +182,7 @@
         "count": "[parameters('numberOfInstances')]"
       },
       "properties": {
+        "enableIPForwarding":true,
         "ipConfigurations": [
           {
             "name": "[concat(variables('vmNamePrefix'), 'ipconfig', copyindex())]",
