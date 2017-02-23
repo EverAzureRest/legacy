@@ -134,7 +134,7 @@
         "artifactsBaseUrl": "",
         "description": "URL to acquire other VM-Series for Azure templates"
       },
-      "defaultValue": "https://gallery.azure.com/artifact/20151001/paloaltonetworks.vmseries-ngfwbundle1.1.0.2/Artifacts"
+      "defaultValue": "https://gallery.azure.com/artifact/20151001/paloaltonetworks.vmseries-ngfwbyol.1.0.2/Artifacts"
     },
     "PublicIPNewOrExisting": {
       "type": "string",
