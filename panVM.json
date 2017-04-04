@@ -136,6 +136,13 @@
       },
       "defaultValue": "https://gallery.azure.com/artifact/20151001/paloaltonetworks.vmseries-ngfwbyol.1.0.2/Artifacts"
     },
+    "customBaseUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "URL to the custom multi-IP config"
+      },
+      "defaultValue": "https://raw.github.com/lorax79/legacy/master"
+    },
     "PublicIPNewOrExisting": {
       "type": "string",
       "defaultValue": "new",
@@ -153,11 +160,17 @@
         "description": "Resource Group containing existing public IP"
       }
     },
-    "publicIPAddressName": {
+    "publicIPAddress1Name": {
       "type": "string",
       "metadata": {
-        "description": "Name of existing public IP resource"
+        "description": "Name of 1st public IP resource"
+      },
+    "publicIPAddress2Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the 2nd Public IP resource"
       }
+    }
     },
     "storageAccountName": {
       "type": "string",
@@ -258,9 +271,9 @@
     ],
     "storageAccountSetupURL": "[concat(parameters('baseUrl'),'/storageAccount-',parameters('storageAccountNewOrExisting'),'.json')]",
     "nsgSetupURL": "[concat(parameters('baseUrl'),'/nsg-new.json')]",
-    "SettingUpPublicIPUrl": "[concat(parameters('baseUrl'),'/publicip-',parameters('PublicIPNewOrExisting'),'.json')]",
+    "SettingUpPublicIPUrl": "[concat(parameters('customBaseUrl'),'/public-ips.json')]",
     "vnetSetupURL": "[concat(parameters('baseUrl'),'/vnet-', parameters('vnetNewOrExisting'),'.json')]",
-    "setupNICsURL": "[concat(parameters('baseUrl'),'/setupNICS-', parameters('vnetNewOrExisting'),'.json')]",
+    "setupNICsURL": "[concat(parameters('customBaseUrl'),'/nics.json')]",
     "vmTemplateUrl": "[concat(parameters('baseUrl'), '/virtual-machine-', parameters('authenticationType'),'.json')]"
   },
   "resources": [
@@ -304,8 +317,11 @@
           "location": {
             "value": "[parameters('location')]"
           },
-          "publicIPAddressName": {
-            "value": "[parameters('publicIPAddressName')]"
+          "publicIPAddress1Name": {
+            "value": "[parameters('publicIPAddress1Name')]"
+          },
+          "publicIPAddress2Name": {
+            "value": "[parameters('publicIPAddress2Name')]"
           },
           "publicIPAddressType": {
             "value": "[variables('publicIPAddressType')]"
@@ -422,8 +438,11 @@
           "virtualNetworkExistingRGName": {
             "value": "[parameters('virtualNetworkExistingRGName')]"
           },
-          "publicIPAddressName": {
-            "value": "[parameters('publicIPAddressName')]"
+          "publicIPAddress1Name": {
+            "value": "[parameters('publicIPAddress1Name')]"
+          },
+          "publicIPAddress2Name": {
+            "value": "[parameters('publicIPAddress2Name')]"
           },
           "PublicIPRGName": {
             "value": "[parameters('PublicIPRGName')]"
